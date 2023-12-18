@@ -1,0 +1,62 @@
+<?php
+
+session_start();
+include('../config/dbcon.php');
+include('../functions/myfunctions.php');
+
+if(isset($_POST['add_category_btn']))
+{
+    $name = $_POST['name'];
+    $slug = $_POST['slug'];
+    $description = $_POST['description'];
+    $meta_title = $_POST['meta_title'];
+    $meta_description = $_POST['meta_description'];
+    $meta_keywords = $_POST['meta_keywords'];
+    $status = isset($_POST['status']) ? '1':'0';
+    $popular = isset($_POST['popular']) ? '1':'0';
+
+    $image = $_FILES['image']['name'];
+    $image_temp = $_FILES['image']['tmp_name'];
+    $image_size = $_FILES['image']['size'];
+    $image_error = $_FILES['image']['error'];
+
+    $path = "../uploads";
+
+    // Check for upload errors
+    if ($image_error !== UPLOAD_ERR_OK) {
+        die("Upload error: " . $image_error);
+    }
+
+    // Check file size
+    $max_size = 1048576; // 1 MB
+    if ($image_size > $max_size) {
+        die("File is too large. Maximum file size is " . $max_size . " bytes.");
+    }
+
+    // Generate unique filename
+    $image_ext = pathinfo($image, PATHINFO_EXTENSION);
+    $filename = time().'.'.$image_ext;
+
+    // Insert data into database
+    $cate_query = "INSERT INTO categories (name, slug, description, meta_title, meta_description, meta_keywords, status, popular, image) 
+    VALUES ('$name', '$slug', '$description', '$meta_title', '$meta_description', '$meta_keywords', '$status', '$popular', '$filename')";
+
+    $cate_query_run = mysqli_query($con, $cate_query);
+
+    if($cate_query_run)
+    {
+        // Move uploaded file to destination directory
+        if (move_uploaded_file($image_temp, $path.'/'.$filename)) {
+            redirect("add-category.php", "Category Added Successfully");
+        } else {
+            die("Failed to move uploaded file.");
+        }
+    }
+    else
+    {
+        redirect("add-category.php", "Something went Wrong");
+    }
+}
+
+    
+?>
